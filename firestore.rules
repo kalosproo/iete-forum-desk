@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Replace with the Google accounts allowed to use the desk.
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email in ["YOUR_EMAIL@gmail.com"];
+    }
+    match /{document=**} {
+      allow read, write: if allowed();
+    }
+  }
+}

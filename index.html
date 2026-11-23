@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{color-scheme:light}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>IETE Forum Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;500&display=swap">
+<style>
+/* Layout: sticky masthead + scrolling section tabs, one section visible at a time, rows open an edit sheet */
+:root{
+  --bg:#FBFBFA; --surface:#FFFFFF; --ink:#111111; --muted:#787774; --line:#EAEAEA; --wash:#F7F6F3;
+  --btn:#111111; --btn-ink:#FFFFFF;
+  --red-bg:#FDEBEC; --red-fg:#9F2F2D; --blue-bg:#E1F3FE; --blue-fg:#1F6C9F;
+  --green-bg:#EDF3EC; --green-fg:#346538; --yel-bg:#FBF3DB; --yel-fg:#956400;
+  --serif:'Newsreader','Iowan Old Style',Georgia,serif;
+  --sans:'Geist','Helvetica Neue',Arial,system-ui,sans-serif;
+  --mono:'Geist Mono','SF Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413; --surface:#1B1B1A; --ink:#EDEDEB; --muted:#9A9893; --line:#2C2C2A; --wash:#222220;
+  --btn:#EDEDEB; --btn-ink:#141413;
+  --red-bg:#3A2121; --red-fg:#F0A6A4; --blue-bg:#1B2F3C; --blue-fg:#8CC6EC;
+  --green-bg:#1F2E20; --green-fg:#9FCFA2; --yel-bg:#392F17; --yel-fg:#E6C16B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1B1B1A; --ink:#EDEDEB; --muted:#9A9893; --line:#2C2C2A; --wash:#222220;
+  --btn:#EDEDEB; --btn-ink:#141413;
+  --red-bg:#3A2121; --red-fg:#F0A6A4; --blue-bg:#1B2F3C; --blue-fg:#8CC6EC;
+  --green-bg:#1F2E20; --green-fg:#9FCFA2; --yel-bg:#392F17; --yel-fg:#E6C16B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--sans);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.wrap{max-width:880px;margin:0 auto;padding-block:0 96px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-top:20px;border-bottom:1px solid var(--line)}
+.brand{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.eyebrow{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font:400 clamp(26px,5vw,34px)/1.1 var(--serif);letter-spacing:-.02em;margin:8px 0 0;text-wrap:balance}
+.sync{font:400 12px var(--mono);color:var(--muted);padding-top:2px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;margin:16px -16px 0;padding:0 16px;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:10px 10px 12px;color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
+nav.tabs button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+nav.tabs .n{font:500 11px var(--mono);margin-left:4px;color:var(--muted)}
+
+main{padding-top:32px}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+h2{font:400 clamp(24px,4vw,30px)/1.15 var(--serif);letter-spacing:-.02em;margin:0}
+.hint{color:var(--muted);font-size:14px;margin:6px 0 20px;max-width:60ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--btn);color:var(--btn-ink);border:1px solid var(--btn);border-radius:6px;padding:8px 14px;font-weight:500;font-size:14px;transition:transform .15s,opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--wash)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.danger{background:var(--red-bg);color:var(--red-fg);border-color:transparent}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.grid{display:grid;gap:12px}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;text-align:left;width:100%}
+.stat b{display:block;font:400 32px/1.1 var(--serif);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.stat em{font-style:normal;font:500 11px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--red-fg)}
+.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start}
+.card h3{margin:0 0 12px;font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+ul.list{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.row{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line);min-width:0}
+.row:last-child{border-bottom:0}
+.row.edit{cursor:pointer}
+.row.edit:hover{background:var(--wash)}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:500;overflow-wrap:anywhere}
+.row .s{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.row .t.done{text-decoration:line-through;color:var(--muted)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{display:inline-block;border-radius:9999px;padding:2px 9px;font:500 10.5px/1.6 var(--mono);letter-spacing:.05em;text-transform:uppercase;background:var(--wash);color:var(--muted)}
+.tag.red{background:var(--red-bg);color:var(--red-fg)} .tag.blue{background:var(--blue-bg);color:var(--blue-fg)}
+.tag.green{background:var(--green-bg);color:var(--green-fg)} .tag.yel{background:var(--yel-bg);color:var(--yel-fg)}
+.check{flex:none;width:22px;height:22px;margin-top:1px;border:1.5px solid var(--muted);border-radius:5px;background:none;display:grid;place-items:center;padding:0}
+.check[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}
+.check[aria-pressed="true"]::after{content:"";width:9px;height:5px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.num{flex:none;width:24px;font:500 12px var(--mono);color:var(--muted);padding-top:3px}
+.empty{border:1px dashed var(--line);border-radius:10px;padding:28px 20px;text-align:center;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--ink);font-weight:500;margin-bottom:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:none;border-radius:9999px;padding:3px 12px;font-size:13px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.flaglist{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.flaglist button{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 0;display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.flaglist li:last-child button{border-bottom:0}
+.flaglist small{color:var(--muted);font-size:13px}
+.bar{height:4px;background:var(--wash);border-radius:2px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font-size:14px}
+dl.kv dt{color:var(--muted)} dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.banner{background:var(--yel-bg);color:var(--yel-fg);border-radius:8px;padding:10px 14px;font-size:13px;margin:16px 0 0}
+.mt{margin-top:16px}
+
+/* sheet */
+.veil{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow-y:auto;border:1px solid var(--line);border-radius:14px 14px 0 0;padding:22px max(20px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+@media (min-width:640px){.veil{align-items:center}.sheet{border-radius:14px}}
+.sheet h3{font:400 24px/1.15 var(--serif);letter-spacing:-.02em;margin:0 0 16px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-width:0}
+.fld textarea{min-height:84px;resize:vertical}
+.pick{display:grid;gap:2px;border:1px solid var(--line);border-radius:6px;padding:4px 10px;max-height:200px;overflow-y:auto}
+.pick label{display:flex;gap:10px;align-items:center;text-transform:none;letter-spacing:0;font:400 14px var(--sans);color:var(--ink);padding:6px 0;margin:0}
+.pick input{width:auto}
+.sheet .foot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:8px}
+.err{color:var(--red-fg);font-size:13px;margin:0 0 10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:13px;z-index:60;max-width:90%}
+textarea.copy{min-height:260px;font:13px/1.5 var(--mono)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div>
+        <div class="eyebrow">IETE Student Forum &middot; SVCE Tirupati</div>
+        <h1>President's desk</h1>
+      </div>
+      <div class="sync" id="sync">Connecting</div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  </header>
+  <main id="view"></main>
+</div>
+<div id="layer"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const fmt=d=>{if(!d)return '';const[y,m,x]=d.split('-').map(Number);return new Date(y,m-1,x).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})};
+const daysTo=d=>Math.round((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/864e5);
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ---- schema: what each record holds and which gaps get flagged ---- */
+const SCH={
+ people:{one:'member',title:'name',
+  f:[{k:'name',l:'Name'},{k:'role',l:'Role',t:'sel',o:['Core team','Coordinator','Member']},{k:'portfolio',l:'Portfolio or team'},{k:'duties',l:'Responsibilities',t:'area'},{k:'contact',l:'Contact (optional)'}],
+  miss:p=>[!p.portfolio&&'portfolio',!p.duties&&'responsibilities'].filter(Boolean)},
+ updates:{one:'update request',title:'who',
+  f:[{k:'who',l:'From'},{k:'area',l:'Area or event'},{k:'status',l:'Status',t:'sel',o:['Requested','Received']},{k:'due',l:'Send by',t:'date'},{k:'text',l:'Update received',t:'area'}],
+  miss:u=>u.status==='Received'?[!u.text&&'update text'].filter(Boolean):[!u.due&&'deadline',!u.area&&'area'].filter(Boolean)},
+ events:{one:'event',title:'title',
+  f:[{k:'title',l:'Event'},{k:'date',l:'Date',t:'date'},{k:'venue',l:'Venue'},{k:'coordinator',l:'Coordinator'},{k:'status',l:'Stage',t:'sel',o:['Idea','Planning','Confirmed','Done','Cancelled']},{k:'next',l:'Next step'},{k:'notes',l:'Notes',t:'area'}],
+  miss:e=>['Done','Cancelled'].includes(e.status)?[]:[!e.date&&'date',!e.venue&&'venue',!e.coordinator&&'coordinator',!e.next&&'next step'].filter(Boolean)},
+ decisions:{one:'decision',title:'q',
+  f:[{k:'q',l:'Decision needed'},{k:'ctx',l:'Context and options',t:'area'},{k:'owner',l:'Decides'},{k:'by',l:'Decide by',t:'date'},{k:'status',l:'Status',t:'sel',o:['Open','Decided']},{k:'outcome',l:'Outcome recorded',t:'area'}],
+  miss:d=>d.status==='Decided'?[!d.outcome&&'outcome'].filter(Boolean):[!d.owner&&'owner',!d.by&&'decide-by date'].filter(Boolean)},
+ followups:{one:'follow-up',title:'task',
+  f:[{k:'task',l:'Follow-up'},{k:'owner',l:'Assigned to'},{k:'due',l:'Due',t:'date'},{k:'status',l:'Status',t:'sel',o:['Open','In progress','Done']},{k:'src',l:'From which meeting'},{k:'note',l:'Notes',t:'area'}],
+  miss:f=>f.status==='Done'?[]:[!f.owner&&'owner',!f.due&&'due date'].filter(Boolean)},
+ meetings:{one:'meeting',title:'title',
+  f:[{k:'title',l:'Meeting'},{k:'date',l:'Date',t:'date'}],
+  miss:m=>[!m.date&&'date',!(m.present&&m.present.length)&&'who attended'].filter(Boolean)},
+ agenda:{one:'agenda item',title:'title',
+  f:[{k:'title',l:'Item'},{k:'lead',l:'Led by'},{k:'mins',l:'Minutes',t:'num'},{k:'notes',l:'Notes',t:'area'}],
+  miss:a=>[!a.lead&&'lead',!a.mins&&'time'].filter(Boolean)},
+ meta:{one:'meeting details',title:null,
+  f:[{k:'date',l:'Date',t:'date'},{k:'time',l:'Time',t:'time'},{k:'venue',l:'Venue'},{k:'purpose',l:'Purpose'}]}
+};
+const TABS=[['overview','Overview'],['agenda','Agenda'],['updates','Team updates'],['events','Events'],['decisions','Decisions'],['followups','Follow-ups'],['attendance','Attendance'],['responsibilities','Responsibilities']];
+const S={people:[],updates:[],events:[],decisions:[],followups:[],meetings:[],agenda:[],meta:{}};
+const loaded=new Set();
+let db=null,canWrite=true,tab=(location.hash||'#overview').slice(1),fol='Open',sheet=null,delArm=false,animate=true;
+if(!TABS.some(t=>t[0]===tab))tab='overview';
+
+const byDate=(k,dir=1)=>(a,b)=>!a[k]&&!b[k]?0:!a[k]?1:!b[k]?-1:a[k].localeCompare(b[k])*dir;
+const open=(col)=>S[col];
+const pending=()=>S.updates.filter(u=>u.status!=='Received');
+const openDec=()=>S.decisions.filter(d=>d.status!=='Decided');
+const openFol=()=>S.followups.filter(f=>f.status!=='Done');
+const overdue=()=>openFol().filter(f=>f.due&&daysTo(f.due)<0);
+const tag=(t,c)=>`<span class="tag ${c||''}">${esc(t)}</span>`;
+const flags=(col,it)=>{const m=SCH[col].miss?SCH[col].miss(it):[];return m.length?tag('Missing: '+m.join(', '),'yel'):''};
+const dueTag=(d,done)=>{if(!d)return '';const n=daysTo(d);if(done)return tag(fmt(d));return n<0?tag(Math.abs(n)+'d overdue','red'):n===0?tag('Due today','yel'):tag(fmt(d)+' ('+n+'d)')};
+
+/* ---- views ---- */
+function head(t,hint,btns){return `<div class="sec-head"><h2>${t}</h2><div class="actions">${btns||''}</div></div><p class="hint">${hint}</p>`}
+const addBtn=(col,label)=>canWrite?`<button class="btn" data-add="${col}">${label}</button>`:'';
+const empty=(a,b)=>`<div class="empty"><b>${a}</b>${b}</div>`;
+const rowEdit=(col,it)=>canWrite?`class="row edit" data-edit="${col}:${esc(it.id)}"`:'class="row"';
+
+function vOverview(){
+  const m=S.meta,od=overdue().length,gaps=[];
+  const cnt=(col,list)=>{const n=list.filter(i=>SCH[col].miss(i).length).length;return n};
+  if(!m.date)gaps.push(['agenda','Next meeting date is not set','Set it in Agenda']);
+  if(!m.venue&&m.date)gaps.push(['agenda','Meeting venue is not set','Agenda']);
+  if(!S.people.length)gaps.push(['responsibilities','No coordinators or members added yet','Add the roster']);
+  if(!S.events.length)gaps.push(['events','No events added yet','Add from your event calendar']);
+  [['people','responsibilities','member','Responsibilities'],['updates','updates','update request','Team updates'],['events','events','event','Events'],['decisions','decisions','decision','Decisions'],['followups','followups','follow-up','Follow-ups'],['agenda','agenda','agenda item','Agenda']].forEach(([col,t,w])=>{
+    const n=cnt(col,S[col]);if(n)gaps.push([t,`${n} ${w}${n>1?'s':''} with missing details`,'Review']);});
+  const nextEv=S.events.filter(e=>e.date&&daysTo(e.date)>=0&&!['Done','Cancelled'].includes(e.status)).sort(byDate('date'))[0];
+  return head('Overview','Where things stand today. Gaps are listed, never filled in for you.')+
+  `<div class="grid stats">
+    <button class="stat" data-nav="followups"><b>${openFol().length}</b><span>Open follow-ups</span>${od?`<br><em>${od} overdue</em>`:''}</button>
+    <button class="stat" data-nav="decisions"><b>${openDec().length}</b><span>Decisions to make</span></button>
+    <button class="stat" data-nav="updates"><b>${pending().length}</b><span>Updates awaited</span></button>
+    <button class="stat" data-nav="events"><b>${S.events.filter(e=>!['Done','Cancelled'].includes(e.status)).length}</b><span>Events in progress</span></button>
+  </div>
+  <div class="grid two">
+    <div class="card"><h3>Next meeting</h3>
+      <dl class="kv"><dt>Date</dt><dd>${m.date?esc(fmt(m.date)):tag('Not set','yel')}</dd><dt>Time</dt><dd>${m.time?esc(m.time):tag('Not set','yel')}</dd><dt>Venue</dt><dd>${m.venue?esc(m.venue):tag('Not set','yel')}</dd><dt>Agenda</dt><dd>${S.agenda.length?S.agenda.length+' items':tag('Empty','yel')}</dd></dl>
+      <div class="actions mt"><button class="btn ghost sm" data-nav="agenda">Open agenda</button></div></div>
+    <div class="card"><h3>Next event</h3>${nextEv?`<div class="t" style="font-weight:500">${esc(nextEv.title)}</div><div class="s" style="color:var(--muted)">${esc(fmt(nextEv.date))} &middot; in ${daysTo(nextEv.date)} days</div><div class="tags">${flags('events',nextEv)}</div>`:'<div class="s" style="color:var(--muted)">No dated upcoming event on record.</div>'}</div>
+  </div>
+  <div class="card mt"><h3>Needs your input</h3>${gaps.length?`<ul class="flaglist">${gaps.map(g=>`<li><button data-nav="${g[0]}"><span>${esc(g[1])}</span><small>${esc(g[2])}</small></button></li>`).join('')}</ul>`:'<div class="s" style="color:var(--muted)">Nothing flagged.</div>'}</div>`;
+}
+
+function vAgenda(){
+  const m=S.meta,list=[...S.agenda].sort((a,b)=>(a.order||0)-(b.order||0));
+  const have=new Set(list.map(a=>a.title));
+  const sug=[];
+  openDec().forEach(d=>sug.push({title:'Decide: '+d.q,lead:d.owner||''}));
+  overdue().forEach(f=>sug.push({title:'Review overdue: '+f.task,lead:f.owner||''}));
+  const sg=sug.filter(s=>!have.has(s.title));
+  window.__sug=sg;
+  const total=list.reduce((a,i)=>a+(+i.mins||0),0);
+  return head('Agenda','Build the next meeting agenda. Suggestions come from your open decisions and overdue follow-ups.',
+   (canWrite?`<button class="btn ghost" data-act="meta">Meeting details</button>`:'')+`<button class="btn ghost" data-act="copyAgenda">Copy agenda</button>`+addBtn('agenda','Add item'))+
+  `<div class="card" style="margin-bottom:16px"><dl class="kv"><dt>Date</dt><dd>${m.date?esc(fmt(m.date)):tag('Not set','yel')}</dd><dt>Time</dt><dd>${m.time?esc(m.time):tag('Not set','yel')}</dd><dt>Venue</dt><dd>${m.venue?esc(m.venue):tag('Not set','yel')}</dd>${m.purpose?`<dt>Purpose</dt><dd>${esc(m.purpose)}</dd>`:''}${total?`<dt>Planned</dt><dd>${total} min</dd>`:''}</dl></div>`+
+  (list.length?`<ul class="list">${list.map((a,i)=>`<li ${rowEdit('agenda',a)}><span class="num">${i+1}</span><div class="main"><div class="t">${esc(a.title)}</div><div class="s">${[a.lead&&'Led by '+esc(a.lead),a.mins&&esc(a.mins)+' min'].filter(Boolean).join(' &middot; ')}</div>${a.notes?`<div class="s">${esc(a.notes)}</div>`:''}<div class="tags">${flags('agenda',a)}</div></div>${canWrite?`<div class="actions"><button class="btn ghost sm" data-act="move:${esc(a.id)}:-1" aria-label="Move up">&uarr;</button><button class="btn ghost sm" data-act="move:${esc(a.id)}:1" aria-label="Move down">&darr;</button></div>`:''}</li>`).join('')}</ul>`:empty('No agenda items yet','Add items, or use a suggestion below.'))+
+  (sg.length&&canWrite?`<div class="card mt"><h3>Suggested from your data</h3><ul class="flaglist">${sg.map((s,i)=>`<li><button data-act="sug:${i}"><span>${esc(s.title)}</span><small>Add</small></button></li>`).join('')}</ul></div>`:'');
+}
+
+function vUpdates(){
+  const list=[...S.updates].sort((a,b)=>(a.status==='Received')-(b.status==='Received')||byDate('due')(a,b));
+  return head('Team updates','Request updates from coordinators before the meeting and keep what they send in one place.',
+   `<button class="btn ghost" data-act="reqText">Copy request message</button>`+(canWrite?`<button class="btn ghost" data-act="reqAll">Request from all coordinators</button>`:'')+addBtn('updates','New request'))+
+  (list.length?`<ul class="list">${list.map(u=>`<li ${rowEdit('updates',u)}><div class="main"><div class="t">${esc(u.who||'Unnamed')}${u.area?` <span style="color:var(--muted);font-weight:400">&middot; ${esc(u.area)}</span>`:''}</div>${u.text?`<div class="s">${esc(u.text)}</div>`:''}<div class="tags">${tag(u.status||'Requested',u.status==='Received'?'green':'blue')}${u.status!=='Received'?dueTag(u.due):''}${flags('updates',u)}</div></div></li>`).join('')}</ul>`:empty('No update requests yet','Add a request, or request from every coordinator once the roster is in Responsibilities.'));
+}
+
+function vEvents(){
+  const list=[...S.events].sort((a,b)=>(['Done','Cancelled'].includes(a.status)-['Done','Cancelled'].includes(b.status))||byDate('date')(a,b));
+  const cls={Idea:'',Planning:'blue',Confirmed:'green',Done:'',Cancelled:'red'};
+  return head('Upcoming events','Coordination status for each event. Empty fields are flagged until you fill them.',addBtn('events','Add event'))+
+  (list.length?`<ul class="list">${list.map(e=>`<li ${rowEdit('events',e)}><div class="main"><div class="t">${esc(e.title)}</div><div class="s">${[e.date&&esc(fmt(e.date)),e.venue&&esc(e.venue),e.coordinator&&'Coordinator: '+esc(e.coordinator)].filter(Boolean).join(' &middot; ')}</div>${e.next?`<div class="s">Next: ${esc(e.next)}</div>`:''}<div class="tags">${tag(e.status||'Idea',cls[e.status||'Idea'])}${e.date&&!['Done','Cancelled'].includes(e.status)?(daysTo(e.date)>=0?tag('In '+daysTo(e.date)+' days'):tag('Date passed','red')):''}${flags('events',e)}</div></div></li>`).join('')}</ul>`:empty('No events added','Add events from your calendar. Nothing is pre-filled.'));
+}
+
+function vDecisions(){
+  const list=[...S.decisions].sort((a,b)=>(a.status==='Decided')-(b.status==='Decided')||byDate('by')(a,b));
+  return head('Decisions to make','Open questions waiting on a call, and the outcomes you have recorded.',addBtn('decisions','Add decision'))+
+  (list.length?`<ul class="list">${list.map(d=>`<li ${rowEdit('decisions',d)}><div class="main"><div class="t">${esc(d.q)}</div>${d.ctx?`<div class="s">${esc(d.ctx)}</div>`:''}${d.status==='Decided'&&d.outcome?`<div class="s" style="color:var(--ink)">Outcome: ${esc(d.outcome)}</div>`:''}<div class="tags">${tag(d.status||'Open',d.status==='Decided'?'green':'blue')}${d.owner?tag('Decides: '+d.owner):''}${d.status!=='Decided'?dueTag(d.by):''}${flags('decisions',d)}</div></div></li>`).join('')}</ul>`:empty('No decisions logged','Add a decision when something needs your call. Record the outcome by changing its status to Decided.'));
+}
+
+function vFollowups(){
+  const all=S.followups;
+  const list=all.filter(f=>fol==='All'||(fol==='Open'&&f.status!=='Done')||(fol==='Overdue'&&f.status!=='Done'&&f.due&&daysTo(f.due)<0)||(fol==='Done'&&f.status==='Done')).sort(byDate('due'));
+  return head('Outstanding follow-ups','Assign, review and tick off actions from meetings.',addBtn('followups','Add follow-up'))+
+  `<div class="chips">${['Open','Overdue','Done','All'].map(c=>`<button class="chip" data-filter="${c}" aria-pressed="${fol===c}">${c}</button>`).join('')}</div>`+
+  (list.length?`<ul class="list">${list.map(f=>{const d=f.status==='Done';return `<li ${rowEdit('followups',f)}>${canWrite?`<button class="check" data-done="${esc(f.id)}" aria-pressed="${d}" aria-label="Mark done"></button>`:''}<div class="main"><div class="t ${d?'done':''}">${esc(f.task)}</div><div class="s">${[f.owner&&'Assigned to '+esc(f.owner),f.src&&'From '+esc(f.src)].filter(Boolean).join(' &middot; ')}</div><div class="tags">${f.status==='In progress'?tag('In progress','blue'):''}${dueTag(f.due,d)}${flags('followups',f)}</div></div></li>`}).join('')}</ul>`:empty(all.length?'Nothing in this view':'No follow-ups yet',all.length?'Try another filter.':'Add the actions that came out of your last meeting.'));
+}
+
+function vAttendance(){
+  const ms=[...S.meetings].sort(byDate('date',-1));
+  const people=[...S.people].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  return head('Attendance','Record who attended each meeting and see turnout per person.',addBtn('meetings','Record meeting'))+
+  (ms.length?`<ul class="list">${ms.map(m=>`<li ${rowEdit('meetings',m)}><div class="main"><div class="t">${esc(m.title)}</div><div class="s">${m.date?esc(fmt(m.date)):''}</div><div class="tags">${tag((m.present||[]).length+' present','green')}${flags('meetings',m)}</div></div></li>`).join('')}</ul>`:empty('No meetings recorded','Record a meeting to start tracking attendance.'))+
+  `<div class="card mt"><h3>Turnout by person</h3>${!people.length?'<div class="s" style="color:var(--muted)">Add members under Responsibilities first.</div>':!ms.length?'<div class="s" style="color:var(--muted)">Percentages appear after the first recorded meeting.</div>':people.map(p=>{const n=ms.filter(m=>(m.present||[]).includes(p.id)).length,pc=Math.round(n/ms.length*100);return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:12px"><span>${esc(p.name)}</span><span style="font:500 12px var(--mono);color:var(--muted)">${n}/${ms.length} &middot; ${pc}%</span></div><div class="bar"><i style="width:${pc}%"></i></div></div>`}).join('')}</div>`;
+}
+
+function vResp(){
+  const list=[...S.people].sort((a,b)=>['Core team','Coordinator','Member'].indexOf(a.role)-['Core team','Coordinator','Member'].indexOf(b.role)||(a.name||'').localeCompare(b.name||''));
+  return head('Responsibilities','Who owns what. This roster also feeds attendance and update requests.',addBtn('people','Add person'))+
+  (list.length?`<ul class="list">${list.map(p=>`<li ${rowEdit('people',p)}><div class="main"><div class="t">${esc(p.name)}</div><div class="s">${[p.portfolio&&esc(p.portfolio),p.contact&&esc(p.contact)].filter(Boolean).join(' &middot; ')}</div>${p.duties?`<div class="s" style="color:var(--ink)">${esc(p.duties)}</div>`:''}<div class="tags">${tag(p.role||'Member',p.role==='Coordinator'?'blue':'')}${flags('people',p)}</div></div></li>`).join('')}</ul>`:empty('No one on the roster','Add coordinators and members with their responsibilities.'));
+}
+
+const VIEWS={overview:vOverview,agenda:vAgenda,updates:vUpdates,events:vEvents,decisions:vDecisions,followups:vFollowups,attendance:vAttendance,responsibilities:vResp};
+const COUNT={agenda:()=>S.agenda.length,updates:()=>pending().length,events:()=>S.events.length,decisions:()=>openDec().length,followups:()=>openFol().length,attendance:()=>S.meetings.length,responsibilities:()=>S.people.length};
+
+var render=function(){
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-nav="${k}" aria-current="${k===tab}">${l}${COUNT[k]&&COUNT[k]()?`<span class="n">${COUNT[k]()}</span>`:''}</button>`).join('');
+  $('#view').innerHTML=(db?'':'<div class="banner">Shared storage is not available in this view, so nothing you enter will be saved.</div>')+VIEWS[tab]();
+  if(animate){animate=false;if(window.anime&&!reduce)anime({targets:'#view .row, #view .stat, #view .card',opacity:[0,1],translateY:[8,0],delay:anime.stagger(30),duration:420,easing:'easeOutQuad'});}
+};
+
+/* ---- sheet (add / edit) ---- */
+function layer(h){$('#layer').innerHTML=h}
+function openSheet(col,id){
+  const sc=SCH[col];
+  const data=col==='meta'?{...S.meta}:id?{...S[col].find(x=>x.id===id)}:{};
+  if(!id&&col!=='meta')sc.f.forEach(f=>{if(f.t==='sel'&&!data[f.k])data[f.k]=f.o[0]});
+  if(!id&&col==='agenda')data.order=(Math.max(0,...S.agenda.map(a=>a.order||0))+1);
+  if(!id&&col==='meetings')data.date=today();
+  sheet={col,id,data};delArm=false;drawSheet();
+}
+function drawSheet(err){
+  const{col,id,data}=sheet,sc=SCH[col];
+  const fld=f=>{const v=data[f.k]==null?'':data[f.k],i='f_'+f.k;
+    const inp=f.t==='sel'?`<select id="${i}" name="${f.k}">${f.o.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`
+      :f.t==='area'?`<textarea id="${i}" name="${f.k}">${esc(v)}</textarea>`
+      :`<input id="${i}" name="${f.k}" type="${f.t==='date'?'date':f.t==='time'?'time':f.t==='num'?'number':'text'}" ${f.t==='num'?'min="0" inputmode="numeric"':''} value="${esc(v)}">`;
+    return `<div class="fld"><label for="${i}">${esc(f.l)}</label>${inp}</div>`};
+  let extra='';
+  if(col==='meetings')extra=`<div class="fld"><label>Present</label>${S.people.length?`<div class="pick">${[...S.people].sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(p=>`<label><input type="checkbox" name="present" value="${esc(p.id)}" ${(data.present||[]).includes(p.id)?'checked':''}>${esc(p.name)}</label>`).join('')}</div>`:'<div class="s" style="color:var(--yel-fg)">No roster yet. Add people under Responsibilities to mark attendance.</div>'}</div>`;
+  const label=col==='meta'?'Meeting details':(id?'Edit ':'New ')+sc.one;
+  layer(`<div class="veil" data-close="1"><form class="sheet" id="sheetForm" role="dialog" aria-modal="true" aria-label="${esc(label)}"><h3>${esc(label[0].toUpperCase()+label.slice(1))}</h3>${err?`<p class="err">${esc(err)}</p>`:''}${sc.f.map(fld).join('')}${extra}<div class="foot"><div class="actions"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" data-close="1">Cancel</button></div>${id?`<button class="btn danger" type="button" data-del="1">${delArm?'Tap again to delete':'Delete'}</button>`:''}</div></form></div>`);
+  const first=$('#sheetForm input,#sheetForm select');if(first&&!id&&col!=='meta')first.focus();
+}
+function readForm(){
+  const fd=new FormData($('#sheetForm')),out={};
+  SCH[sheet.col].f.forEach(f=>{let v=(fd.get(f.k)||'').toString().trim();out[f.k]=f.t==='num'?(v===''?'':+v):v});
+  if(sheet.col==='meetings')out.present=fd.getAll('present');
+  if(sheet.col==='agenda')out.order=sheet.data.order||0;
+  return out;
+}
+async function save(){
+  const{col,id}=sheet,sc=SCH[col],data=readForm();
+  if(sc.title&&!data[sc.title]){drawSheet('Add a '+sc.f.find(f=>f.k===sc.title).l.toLowerCase()+' before saving.');return}
+  if(!db){drawSheet('Shared storage is not available, so this cannot be saved.');return}
+  try{
+    if(col==='meta')await db.doc('meta/meeting').set(data);
+    else if(id)await db.collection(col).doc(id).update(data);
+    else{data.createdAt=Date.now();await db.collection(col).add(data)}
+    layer('');sheet=null;
+  }catch(e){drawSheet('Could not save ('+((e&&e.code)||'error')+'). Check your access and try again.')}
+}
+async function del(){
+  if(!delArm){delArm=true;drawSheet();return}
+  try{await db.collection(sheet.col).doc(sheet.id).delete();layer('');sheet=null}catch(e){delArm=false;drawSheet('Could not delete.')}
+}
+
+/* ---- text outputs ---- */
+function showText(title,text){
+  layer(`<div class="veil" data-close="1"><div class="sheet" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><div class="fld"><textarea class="copy" id="copyBox" readonly>${esc(text)}</textarea></div><div class="foot"><div class="actions"><button class="btn" data-copy="1">Copy</button><button class="btn ghost" data-close="1">Close</button></div></div></div></div>`);
+  const b=$('#copyBox');if(b){b.focus();b.select()}
+}
+function agendaText(){
+  const m=S.meta,list=[...S.agenda].sort((a,b)=>(a.order||0)-(b.order||0)),ns='[not set]';
+  return `IETE Student Forum, SVCE: meeting agenda\nDate: ${m.date?fmt(m.date):ns}\nTime: ${m.time||ns}\nVenue: ${m.venue||ns}${m.purpose?'\nPurpose: '+m.purpose:''}\n\n`+(list.length?list.map((a,i)=>`${i+1}. ${a.title}${a.lead||a.mins?' ('+[a.lead,a.mins&&a.mins+' min'].filter(Boolean).join(', ')+')':''}${a.notes?'\n   '+a.notes:''}`).join('\n'):'[no agenda items yet]');
+}
+function reqText(){
+  const m=S.meta,p=pending();
+  return `Hi team,\n\nPlease send your update for ${m.date?'the meeting on '+fmt(m.date):'the next IETE meeting [date not set]'}${m.venue?' at '+m.venue:''}.\n\nFormat:\n- Done since last meeting\n- In progress\n- Blocked or need from me\n- Anything to decide\n\n${p.length?'Awaiting from: '+p.map(u=>(u.who||'?')+(u.area?' ('+u.area+')':'')+(u.due?', by '+fmt(u.due):'')).join('; ')+'\n':'[no pending requests recorded yet]\n'}\nThanks,\nRahul`;
+}
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)}
+
+/* ---- actions ---- */
+async function run(fn){try{await fn()}catch(e){toast('Could not save that change.')}}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-nav],[data-add],[data-edit],[data-done],[data-filter],[data-act],[data-close],[data-del],[data-copy]');
+  if(!t)return;
+  if(t.dataset.close){if(t.classList.contains('veil')&&e.target!==t)return;layer('');sheet=null;return}
+  if(t.dataset.nav){tab=t.dataset.nav;animate=true;location.hash=tab;render();scrollTo(0,0);return}
+  if(t.dataset.add){openSheet(t.dataset.add);return}
+  if(t.dataset.done){const f=S.followups.find(x=>x.id===t.dataset.done);if(f&&db)run(()=>db.collection('followups').doc(f.id).update({status:f.status==='Done'?'Open':'Done'}));return}
+  if(t.dataset.edit){openSheet(...t.dataset.edit.split(':'));return}
+  if(t.dataset.filter){fol=t.dataset.filter;render();return}
+  if(t.dataset.del){del();return}
+  if(t.dataset.copy){const v=$('#copyBox').value;navigator.clipboard.writeText(v).then(()=>toast('Copied')).catch(()=>{$('#copyBox').select();toast('Select all and copy')});return}
+  const a=t.dataset.act;
+  if(a==='meta')openSheet('meta');
+  else if(a==='copyAgenda')showText('Agenda, ready to paste',agendaText());
+  else if(a==='reqText')showText('Update request, ready to paste',reqText());
+  else if(a==='reqAll'){
+    const have=new Set(pending().map(u=>u.who));
+    const need=S.people.filter(p=>p.role==='Coordinator'&&!have.has(p.name));
+    if(!S.people.some(p=>p.role==='Coordinator')){toast('No coordinators on the roster yet');return}
+    if(!need.length){toast('Every coordinator already has a pending request');return}
+    run(async()=>{for(const p of need)await db.collection('updates').add({who:p.name,area:p.portfolio||'',status:'Requested',due:S.meta.date||'',text:'',createdAt:Date.now()});toast(need.length+' requests added')});
+  }
+  else if(a.startsWith('sug:')){const s=window.__sug[+a.slice(4)];if(s&&db)run(()=>db.collection('agenda').add({title:s.title,lead:s.lead,mins:'',notes:'',order:Math.max(0,...S.agenda.map(x=>x.order||0))+1,createdAt:Date.now()}))}
+  else if(a.startsWith('move:')){
+    const[,id,d]=a.split(':'),l=[...S.agenda].sort((x,y)=>(x.order||0)-(y.order||0)),i=l.findIndex(x=>x.id===id),j=i+ +d;
+    if(j<0||j>=l.length)return;
+    run(async()=>{const A=l[i],B=l[j];await db.collection('agenda').doc(A.id).update({order:j+1});await db.collection('agenda').doc(B.id).update({order:i+1})});
+    // normalise to positions so equal order values never stall a move
+    l.forEach((x,k)=>{x.order=k+1});
+  }
+});
+document.addEventListener('submit',e=>{if(e.target.id==='sheetForm'){e.preventDefault();save()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet){layer('');sheet=null}});
+addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h)&&h!==tab){tab=h;animate=true;render()}});
+
+/* ---- data: Firebase Firestore with Google sign-in ---- */
+let needSignIn=false,auth=null;
+const cfg=window.FIREBASE_CONFIG,ok=window.firebase&&cfg&&cfg.apiKey&&!/YOUR_/.test(cfg.apiKey);
+const _render=render;
+render=function(){
+  if(!ok){$('#view').innerHTML='<div class="card"><h3>Setup needed</h3><p>Add your Firebase keys to <code>firebase-config.js</code>, then reload. See the README.</p></div>';return}
+  if(needSignIn){$('#tabs').innerHTML='';$('#view').innerHTML='<div class="card"><h3>Sign in</h3><p>Use the Google account on the allowed list.</p><div class="actions"><button class="btn" data-act="signin">Sign in with Google</button></div></div>';return}
+  _render();
+};
+render();
+if(ok){
+  firebase.initializeApp(cfg);auth=firebase.auth();
+  const timer=setTimeout(()=>{if(loaded.size<8)$('#sync').textContent='Shared data not reachable yet'},10000);
+  const subs=[];
+  auth.onAuthStateChanged(u=>{
+    subs.forEach(f=>f());subs.length=0;loaded.clear();
+    if(!u){db=null;needSignIn=true;$('#sync').textContent='Signed out';render();return}
+    needSignIn=false;db=firebase.firestore();canWrite=true;$('#sync').textContent='Connecting';
+    const done=()=>{if(loaded.size>=8){clearTimeout(timer);$('#sync').textContent='Shared and live'}if(!sheet)render()};
+    const err=()=>{$('#sync').textContent='No access. Check the allowed email list.'};
+    ['people','updates','events','decisions','followups','meetings','agenda'].forEach(col=>subs.push(db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(d=>({id:d.id,...d.data()}));loaded.add(col);done()},err)));
+    subs.push(db.doc('meta/meeting').onSnapshot(s=>{S.meta=s.exists?s.data():{};loaded.add('meta');done()},err));
+    render();
+  });
+}else $('#sync').textContent='Firebase not configured';
+document.addEventListener('click',e=>{if(e.target.closest('[data-act="signin"]')&&auth)auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(()=>toast('Sign-in failed'))});
+})();
+</script>
+</body>
+</html>
